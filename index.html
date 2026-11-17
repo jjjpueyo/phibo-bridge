@@ -2,43 +2,123 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Phibo Mobile Manager</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #fff; margin: 0; padding: 0; }
-        header { background: #1f1f1f; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #333; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #121212; 
+            color: #fff; 
+            margin: 0; 
+            padding: 0; 
+        }
+        header { 
+            background: #1f1f1f; 
+            padding: 15px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px; 
+            font-weight: bold; 
+            border-bottom: 1px solid #333; 
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-btn {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         .hidden { display: none !important; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; box-sizing: border-box; }
-        button { background: #007acc; border: none; font-weight: bold; cursor: pointer; }
-        button:active { background: #005999; }
-        .tabs { display: flex; background: #1f1f1f; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #333; }
-        .tab { flex: 1; text-align: center; padding: 15px; color: #888; cursor: pointer; font-size: 14px; }
-        .tab.active { color: #007acc; font-weight: bold; }
-        .content-box { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 70px; border: 1px solid #333; }
+        input, button { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 8px 0; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+            background: #222; 
+            color: #fff; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        button.primary { 
+            background: #007acc; 
+            border: none; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 15px;
+        }
+        button.primary:active { background: #005999; }
+        .tabs { 
+            display: flex; 
+            background: #1f1f1f; 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            border-top: 1px solid #333; 
+            z-index: 100;
+        }
+        .tab { 
+            flex: 1; 
+            text-align: center; 
+            padding: 16px; 
+            color: #888; 
+            cursor: pointer; 
+            font-size: 15px; 
+        }
+        .tab.active { 
+            color: #007acc; 
+            font-weight: bold; 
+            border-top: 2px solid #007acc;
+        }
+        .content-box { 
+            background: #1a1a1a; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 80px; 
+            border: 1px solid #333; 
+            overflow-x: auto;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 8px; border-bottom: 1px solid #333; text-align: left; }
+        .loader { text-align: center; color: #888; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <header>Phibo Mobile Manager</header>
+    <header>
+        <span>Phibo Mobile</span>
+        <button id="refresh-btn" class="header-btn hidden" onclick="carregarDades()">↻ Actualitzar</button>
+    </header>
 
     <!-- PANTALLA DE LOGIN -->
     <div id="login-screen" class="container">
-        <h2>Entrar a Phibo</h2>
-        <input type="text" id="username" placeholder="Usuari / Email">
-        <input type="password" id="password" placeholder="Contrasenya">
-        <button onclick="foureLogin()">Iniciar Sessió</button>
+        <h2 style="margin-top: 20px;">Iniciar Sessió</h2>
+        <input type="text" id="username" placeholder="Usuari (ex: jpueyo)" autocomplete="username">
+        <input type="password" id="password" placeholder="Contrasenya" autocomplete="current-password">
+        <button id="login-btn" class="primary" onclick="ferLogin()">Entrar</button>
+        <p id="login-status" style="color: #ff6b6b; text-align: center; font-size: 14px;"></p>
     </div>
 
     <!-- PANTALLA PRINCIPAL (AMB PESTANYES) -->
     <div id="app-screen" class="container hidden">
         <div id="tab-cc" class="content-box">
-            <h3>CAD/CAM Manager</h3>
-            <div id="cc-content">Carregant dades...</div>
+            <h3 style="margin-top: 0; color: #007acc;">CAD/CAM Manager</h3>
+            <div id="cc-content"><div class="loader">Carregant dades...</div></div>
         </div>
         <div id="tab-ticket" class="content-box hidden">
-            <h3>Ticketing Phibo</h3>
-            <div id="ticket-content">Carregant tiquets...</div>
+            <h3 style="margin-top: 0; color: #007acc;">Ticketing Phibo</h3>
+            <div id="ticket-content"><div class="loader">Carregant tiquets...</div></div>
         </div>
     </div>
 
@@ -49,39 +129,69 @@
     </div>
 
     <script>
-        const API_URL = "http://localhost:5000/api"; // Canvia-ho per la URL del teu servidor pont
+        const API_URL = "https://phibo-bridge.onrender.com/api";
 
-        async function foureLogin() {
-            const username = document.getElementById('username').value;
+        window.onload = () => {
+            const savedUser = localStorage.getItem('phibo_user');
+            if (savedUser) document.getElementById('username').value = savedUser;
+        };
+
+        async function ferLogin() {
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
+            const btn = document.getElementById('login-btn');
+            const status = document.getElementById('login-status');
 
-            const res = await fetch(`${API_URL}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
+            if (!username || !password) {
+                status.innerText = "Introdueix usuari i contrasenya.";
+                return;
+            }
 
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                document.getElementById('nav-bar').classList.remove('hidden');
-                carregarDades();
-            } else {
-                alert("Error de login: " + data.message);
+            btn.innerText = "Connectant...";
+            btn.disabled = true;
+            status.innerText = "Si el servidor estava adormit, pot trigar uns 30 segons...";
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('phibo_user', username);
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-screen').classList.remove('hidden');
+                    document.getElementById('nav-bar').classList.remove('hidden');
+                    document.getElementById('refresh-btn').classList.remove('hidden');
+                    carregarDades();
+                } else {
+                    status.innerText = "Error: " + (data.message || "Dades incorrectes");
+                }
+            } catch (err) {
+                status.innerText = "Error de connexió amb el servidor Render.";
+            } finally {
+                btn.innerText = "Entrar";
+                btn.disabled = false;
             }
         }
 
         async function carregarDades() {
-            // Carregar CAD/CAM
-            const resCC = await fetch(`${API_URL}/ccmanager`);
-            const dataCC = await resCC.json();
-            document.getElementById('cc-content').innerHTML = dataCC.html || "Sense dades";
+            document.getElementById('cc-content').innerHTML = '<div class="loader">Actualitzant CAD/CAM...</div>';
+            document.getElementById('ticket-content').innerHTML = '<div class="loader">Actualitzant tiquets...</div>';
 
-            // Carregar Ticketing
-            const resTicket = await fetch(`${API_URL}/ticketing`);
-            const dataTicket = await resTicket.json();
-            document.getElementById('ticket-content').innerHTML = dataTicket.html || "Sense dades";
+            try {
+                const resCC = await fetch(`${API_URL}/ccmanager`);
+                const dataCC = await resCC.json();
+                document.getElementById('cc-content').innerHTML = dataCC.html || "No s'han trobat dades.";
+
+                const resTicket = await fetch(`${API_URL}/ticketing`);
+                const dataTicket = await resTicket.json();
+                document.getElementById('ticket-content').innerHTML = dataTicket.html || "No s'han trobat tiquets.";
+            } catch (err) {
+                document.getElementById('cc-content').innerHTML = "Error en carregar les dades.";
+            }
         }
 
         function switchTab(tab) {

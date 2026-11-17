@@ -1,12 +1,19 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
+CORS(app)
 
 LOGIN_URL = "https://customercenter.phibo.com/Account/Login?ReturnUrl=%2f"
 CC_MANAGER_URL = "https://customercenter.phibo.com/CCManager"
 TICKETING_URL = "https://customercenter.phibo.com/NewHelpdesk"
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -32,11 +39,10 @@ def login():
     headers = {'Referer': LOGIN_URL}
     login_res = session.post(LOGIN_URL, data=payload, headers=headers, allow_redirects=True)
     
-    # Comprovar si el login ha estat correcte (si ens ha portat a la pàgina principal)
+    # Comprovar si el login ha estat correcte
     if "Account/Login" in login_res.url:
         return jsonify({'success': False, 'message': 'Usuari o contrasenya incorrectes'}), 401
         
-    # Guardem les galetes de sessió per a aquest usuari (en producció es pot gestionar amb un diccionari o token)
     app.config['USER_SESSION'] = session
     return jsonify({'success': True, 'message': 'Login correcte'})
 
@@ -48,12 +54,9 @@ def get_ccmanager():
         
     res = session.get(CC_MANAGER_URL)
     soup = BeautifulSoup(res.text, 'html.parser')
+    content = soup.find('form', {'id': 'frm_base'}) or soup.find('div', {'class': 'body-content'})
     
-    # Aquí pots extreure les taules o dades concretes de Programacion.aspx
-    # Per exemple, recollir files de taules o missatges clau:
-    content = soup.find('div', {'id': 'frm_base'}) or soup.find('div', {'class': 'body-content'})
-    
-    return jsonify({'html': str(content)})
+    return jsonify({'html': str(content) if content else res.text})
 
 @app.route('/api/ticketing', methods=['GET'])
 def get_ticketing():
@@ -65,7 +68,8 @@ def get_ticketing():
     soup = BeautifulSoup(res.text, 'html.parser')
     content = soup.find('div', {'class': 'body-content'})
     
-    return jsonify({'html': str(content)})
+    return jsonify({'html': str(content) if content else res.text})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
