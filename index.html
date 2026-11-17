@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phibo Mobile Manager</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #fff; margin: 0; padding: 0; }
+        header { background: #1f1f1f; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #333; }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .hidden { display: none !important; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; box-sizing: border-box; }
+        button { background: #007acc; border: none; font-weight: bold; cursor: pointer; }
+        button:active { background: #005999; }
+        .tabs { display: flex; background: #1f1f1f; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #333; }
+        .tab { flex: 1; text-align: center; padding: 15px; color: #888; cursor: pointer; font-size: 14px; }
+        .tab.active { color: #007acc; font-weight: bold; }
+        .content-box { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 70px; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+    <header>Phibo Mobile Manager</header>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen" class="container">
+        <h2>Entrar a Phibo</h2>
+        <input type="text" id="username" placeholder="Usuari / Email">
+        <input type="password" id="password" placeholder="Contrasenya">
+        <button onclick="foureLogin()">Iniciar Sessió</button>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL (AMB PESTANYES) -->
+    <div id="app-screen" class="container hidden">
+        <div id="tab-cc" class="content-box">
+            <h3>CAD/CAM Manager</h3>
+            <div id="cc-content">Carregant dades...</div>
+        </div>
+        <div id="tab-ticket" class="content-box hidden">
+            <h3>Ticketing Phibo</h3>
+            <div id="ticket-content">Carregant tiquets...</div>
+        </div>
+    </div>
+
+    <!-- BARRA DE NAVEGACIÓ INFERIOR -->
+    <div id="nav-bar" class="tabs hidden">
+        <div class="tab active" onclick="switchTab('cc')">CAD/CAM</div>
+        <div class="tab" onclick="switchTab('ticket')">Ticketing</div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:5000/api"; // Canvia-ho per la URL del teu servidor pont
+
+        async function foureLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('nav-bar').classList.remove('hidden');
+                carregarDades();
+            } else {
+                alert("Error de login: " + data.message);
+            }
+        }
+
+        async function carregarDades() {
+            // Carregar CAD/CAM
+            const resCC = await fetch(`${API_URL}/ccmanager`);
+            const dataCC = await resCC.json();
+            document.getElementById('cc-content').innerHTML = dataCC.html || "Sense dades";
+
+            // Carregar Ticketing
+            const resTicket = await fetch(`${API_URL}/ticketing`);
+            const dataTicket = await resTicket.json();
+            document.getElementById('ticket-content').innerHTML = dataTicket.html || "Sense dades";
+        }
+
+        function switchTab(tab) {
+            if (tab === 'cc') {
+                document.getElementById('tab-cc').classList.remove('hidden');
+                document.getElementById('tab-ticket').classList.add('hidden');
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.querySelectorAll('.tab')[1].classList.remove('active');
+            } else {
+                document.getElementById('tab-cc').classList.add('hidden');
+                document.getElementById('tab-ticket').classList.remove('hidden');
+                document.querySelectorAll('.tab')[0].classList.remove('active');
+                document.querySelectorAll('.tab')[1].classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
